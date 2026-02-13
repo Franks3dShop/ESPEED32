@@ -40,10 +40,18 @@
                                                TLE493D_ADDRESS_A2, TLE493D_ADDRESS_A3};
     
   #elif defined(TLE493D_P3B6)
-    // TLE493D-P3B6 I2C addresses
-    #define TLE493D_PRIMARY_ADDRESS   0x5D    // P3B6 A0 variant (7-bit address)
-    #define TLE493D_SECONDARY_ADDRESS 0x35    // P3B6 alternate address (if using A1 variant)
+    // TLE493D-P3B6 I2C addresses (7-bit addressing)
+    // The P3B6 comes in 4 variants: A0, A1, A2, A3 with different addresses
+    // Based on Infineon TLE493D family addressing scheme
+    #define TLE493D_ADDRESS_A0  0x35    // P3B6-A0 (most common)
+    #define TLE493D_ADDRESS_A1  0x22    // P3B6-A1 (shared with W2B6-A1)
+    #define TLE493D_ADDRESS_A2  0x78    // P3B6-A2
+    #define TLE493D_ADDRESS_A3  0x5D    // P3B6-A3
     #define SENSOR_NAME "TLE493D-P3B6"
+    
+    // Array of all possible addresses to scan
+    const uint8_t TLE493D_P3B6_addresses[] = {TLE493D_ADDRESS_A0, TLE493D_ADDRESS_A1,
+                                               TLE493D_ADDRESS_A2, TLE493D_ADDRESS_A3};
     
   #else
     // Default to W2B6 if neither is defined (as per schematic)
@@ -114,37 +122,39 @@ void HAL_InitHW()
       }
       
     #elif defined(TLE493D_P3B6)
-      // P3B6: Try primary and secondary addresses
-      Wire1.beginTransmission(TLE493D_PRIMARY_ADDRESS);
-      if (Wire1.endTransmission() == 0) {
-        TLE493D_detected_address = TLE493D_PRIMARY_ADDRESS;
-        sensor_found = true;
-        Serial.print("✓ Sensor found at primary address: 0x");
-        Serial.println(TLE493D_PRIMARY_ADDRESS, HEX);
-      }
-      
-      if (!sensor_found) {
-        Wire1.beginTransmission(TLE493D_SECONDARY_ADDRESS);
+      // P3B6: Scan all 4 possible addresses (A0, A1, A2, A3 variants)
+      Serial.println("  Scanning P3B6 addresses (A0/A1/A2/A3 variants)...");
+      for (uint8_t i = 0; i < 4 && !sensor_found; i++) {
+        uint8_t addr = TLE493D_P3B6_addresses[i];
+        Wire1.beginTransmission(addr);
         if (Wire1.endTransmission() == 0) {
-          TLE493D_detected_address = TLE493D_SECONDARY_ADDRESS;
+          TLE493D_detected_address = addr;
           sensor_found = true;
-          Serial.print("✓ Sensor found at secondary address: 0x");
-          Serial.println(TLE493D_SECONDARY_ADDRESS, HEX);
+          Serial.print("✓ Sensor found at address: 0x");
+          Serial.print(addr, HEX);
+          Serial.print(" (");
+          switch(addr) {
+            case 0x35: Serial.print("P3B6-A0"); break;
+            case 0x22: Serial.print("P3B6-A1, 8-bit: 0x44/0x45"); break;
+            case 0x78: Serial.print("P3B6-A2, 8-bit: 0xF0/0xF1"); break;
+            case 0x5D: Serial.print("P3B6-A3, 8-bit: 0xBA/0xBB"); break;
+            default: Serial.print("Unknown variant"); break;
+          }
+          Serial.println(")");
         }
       }
       
       if (!sensor_found) {
         Serial.println("✗ ERROR: TLE493D-P3B6 sensor not detected!");
-        Serial.print("  Tried addresses: 0x");
-        Serial.print(TLE493D_PRIMARY_ADDRESS, HEX);
-        Serial.print(" and 0x");
-        Serial.println(TLE493D_SECONDARY_ADDRESS, HEX);
+        Serial.println("  Tried addresses: 0x35 (A0), 0x22 (A1), 0x78 (A2), 0x5D (A3)");
+        Serial.println("  Note: 8-bit addresses are 2x 7-bit (e.g., 0x44 write = 0x22 in 7-bit)");
         Serial.println("  Please check:");
         Serial.println("  1. Sensor is properly connected");
-        Serial.println("  2. I2C pullup resistors are present");
+        Serial.println("  2. I2C pullup resistors are present (4.7kΩ recommended)");
         Serial.println("  3. Correct sensor variant defined in HAL.h");
-        // Use primary address as fallback
-        TLE493D_detected_address = TLE493D_PRIMARY_ADDRESS;
+        Serial.println("  4. Check if you have P3B6-A0, A1, A2, or A3 variant");
+        // Use A0 address as fallback
+        TLE493D_detected_address = TLE493D_ADDRESS_A0;
       }
     #endif
     
