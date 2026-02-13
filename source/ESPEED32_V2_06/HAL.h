@@ -98,8 +98,9 @@
 #define AN_VIN_DIV   36
 
 /****** ENCODER PIN ******/
-#define ENCODER_A_PIN      16 /* In our encoder is PIN S1 */
-#define ENCODER_B_PIN      17 /* In our encoder is PIN S2 */
+/****** ENCODER PIN ******/
+#define ENCODER_A_PIN      17 /* In our encoder is PIN S2 - SWAPPED FOR REVERSE */
+#define ENCODER_B_PIN      16 /* In our encoder is PIN S1 - SWAPPED FOR REVERSE */
 #define ENCODER_BUTTON_PIN 4  /* In our encoder is PIN KEY */
 #define ENCODER_VCC_PIN    -1 /* 27 put -1 of Rotary encoder Vcc is connected directly to 3,3V; else you can use declared output pin for powering rotary encoder */
 #define ENCODER_STEPS      4
