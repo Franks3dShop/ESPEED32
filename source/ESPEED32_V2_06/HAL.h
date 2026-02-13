@@ -55,8 +55,8 @@
 /* IMPORTANT: Uncomment ONLY ONE of the following lines to match your hardware */
 /* Check your schematic or PCB to determine which sensor you have installed */
 
-// #define TLE493D_P3B6    // For TLE493D-P3B6 (newer version, I2C address 0x5D)
-#define TLE493D_W2B6    // For TLE493D-W2B6 (as per ESPEED32 V3.0 schematic, I2C address 0x1F or 0x5E)
+#define TLE493D_P3B6    // For TLE493D-P3B6 (newer version, I2C address 0x5D)
+//#define TLE493D_W2B6    // For TLE493D-W2B6 (as per ESPEED32 V3.0 schematic, I2C address 0x1F or 0x5E)
 
 #if defined (AS5600_MAG) || defined (AS5600L)
   #define THROTTLE_REV        1  /* if 1 the throttle is at full press when the ADC value is the minimum (inverted) */
