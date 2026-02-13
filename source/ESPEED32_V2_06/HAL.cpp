@@ -73,7 +73,8 @@
 void HAL_InitHW()
 {
   /* Setup fo the parameters for serial(debug) communication */ 
-  Serial.begin(115200);   // debug restore me   
+  Serial.begin(115200);   // debug restore me
+  delay(10); // Give serial time to open
 
   #ifdef TLE493D_MAG
     Wire1.begin(SDA0_PIN, SCL0_PIN, 1000000L); // Initialize I2C for magnetic sensor
@@ -223,7 +224,6 @@ void HALanalogWrite (const int PWMchan, int value)
       break;
   }
 }
-
 
 int16_t HAL_ReadTriggerRaw()
 {
