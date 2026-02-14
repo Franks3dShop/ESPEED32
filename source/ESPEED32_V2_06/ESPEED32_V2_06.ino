@@ -94,7 +94,6 @@ void IRAM_ATTR readEncoderISR();
 /* Setup */
 void setup()
 {
-
   /***** Pin and Serial Setup *****/
   HAL_PinSetup();
 

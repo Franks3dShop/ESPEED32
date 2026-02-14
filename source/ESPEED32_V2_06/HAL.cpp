@@ -74,7 +74,9 @@ void HAL_InitHW()
 {
   /* Setup fo the parameters for serial(debug) communication */ 
   Serial.begin(115200);   // debug restore me
-  delay(10); // Give serial time to open
+  delay(2000);            // ⭐ Attendre 2 secondes
+  Serial.println("\n=== ESPEED32 STARTED ===\n");
+  Serial.println("Debug Start");
 
   #ifdef TLE493D_MAG
     Wire1.begin(SDA0_PIN, SCL0_PIN, 1000000L); // Initialize I2C for magnetic sensor
