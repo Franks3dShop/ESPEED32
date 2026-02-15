@@ -17,13 +17,14 @@
   #include "MT6701.hpp"
   MT6701 mt6701; // magnetic sensor, install MT6701 library by Noran Raskin
 
-#elif defined (TLE493D_MAG)
+#elif defined (TLE493D_P3B6) || defined (TLE493D_W2B6)
   #include <Wire.h>                 // default I²C library
   
   /* TLE493D Sensor I2C Address Configuration */
   /* The TLE493D family has different variants with different I2C addresses */
   
   #if defined(TLE493D_W2B6)
+    #include <Wire.h>                 // default I²C library
     // TLE493D-W2B6 I2C addresses (7-bit addressing)
     // The W2B6 comes in 4 variants: A0, A1, A2, A3 with different addresses
     // A0: 0x1F (default), A1: 0x22, A2: 0x6E, A3: 0x44
@@ -78,8 +79,8 @@ void HAL_InitHW()
   Serial.println("\n=== ESPEED32 STARTED ===\n");
   Serial.println("Debug Start");
 
-  #ifdef TLE493D_MAG
-    Wire1.begin(SDA0_PIN, SCL0_PIN, 1000000L); // Initialize I2C for magnetic sensor
+  #if defined(TLE493D_W2B6)
+    Wire1.begin(SDA0_PIN, SCL0_PIN, 400000L); // Initialize I2C for magnetic sensor
     
     // Auto-detect which TLE493D variant is connected
     bool sensor_found = false;
@@ -88,90 +89,102 @@ void HAL_InitHW()
     Serial.print("Scanning for ");
     Serial.println(SENSOR_NAME);
     
-    #if defined(TLE493D_W2B6)
-      // W2B6: Scan all 4 possible addresses (A0, A1, A2, A3 variants)
-      Serial.println("  Scanning W2B6 addresses (A0/A1/A2/A3 variants)...");
-      for (uint8_t i = 0; i < 4 && !sensor_found; i++) {
-        uint8_t addr = TLE493D_W2B6_addresses[i];
-        Wire1.beginTransmission(addr);
-        if (Wire1.endTransmission() == 0) {
-          TLE493D_detected_address = addr;
-          sensor_found = true;
-          Serial.print("✓ Sensor found at address: 0x");
-          Serial.print(addr, HEX);
-          Serial.print(" (");
-          switch(addr) {
-            case 0x1F: Serial.print("W2B6-A0"); break;
-            case 0x22: Serial.print("W2B6-A1, 8-bit: 0x44/0x45"); break;
-            case 0x6E: Serial.print("W2B6-A2"); break;
-            case 0x44: Serial.print("W2B6-A3"); break;
-            default: Serial.print("Unknown variant"); break;
-          }
-          Serial.println(")");
+    // W2B6: Scan all 4 possible addresses (A0, A1, A2, A3 variants)
+    Serial.println("  Scanning W2B6 addresses (A0/A1/A2/A3 variants)...");
+    for (uint8_t i = 0; i < 4 && !sensor_found; i++) {
+      uint8_t addr = TLE493D_W2B6_addresses[i];
+      Wire1.beginTransmission(addr);
+      if (Wire1.endTransmission() == 0) {
+        TLE493D_detected_address = addr;
+        sensor_found = true;
+        Serial.print("✓ Sensor found at address: 0x");
+        Serial.print(addr, HEX);
+        Serial.print(" (");
+        switch(addr) {
+          case 0x1F: Serial.print("W2B6-A0"); break;
+          case 0x22: Serial.print("W2B6-A1, 8-bit: 0x44/0x45"); break;
+          case 0x6E: Serial.print("W2B6-A2"); break;
+          case 0x44: Serial.print("W2B6-A3"); break;
+          default: Serial.print("Unknown variant"); break;
         }
+        Serial.println(")");
       }
-      
-      if (!sensor_found) {
-        Serial.println("✗ ERROR: TLE493D-W2B6 sensor not detected!");
-        Serial.println("  Tried addresses: 0x1F (A0), 0x22 (A1), 0x6E (A2), 0x44 (A3)");
-        Serial.println("  Note: 8-bit addresses are 2x 7-bit (e.g., 0x44 write = 0x22 in 7-bit)");
-        Serial.println("  Please check:");
-        Serial.println("  1. Sensor is properly connected");
-        Serial.println("  2. I2C pullup resistors are present (4.7kΩ recommended)");
-        Serial.println("  3. Correct sensor variant defined in HAL.h");
-        Serial.println("  4. Check if you have W2B6-A0, A1, A2, or A3 variant");
-        // Use A0 address as fallback
-        TLE493D_detected_address = TLE493D_ADDRESS_A0;
-      }
-      
-    #elif defined(TLE493D_P3B6)
-      // P3B6: Scan all 4 possible addresses (A0, A1, A2, A3 variants)
-      Serial.println("  Scanning P3B6 addresses (A0/A1/A2/A3 variants)...");
-      for (uint8_t i = 0; i < 4 && !sensor_found; i++) {
-        uint8_t addr = TLE493D_P3B6_addresses[i];
-        Wire1.beginTransmission(addr);
-        if (Wire1.endTransmission() == 0) {
-          TLE493D_detected_address = addr;
-          sensor_found = true;
-          Serial.print("✓ Sensor found at address: 0x");
-          Serial.print(addr, HEX);
-          Serial.print(" (");
-          switch(addr) {
-            case 0x35: Serial.print("P3B6-A0"); break;
-            case 0x22: Serial.print("P3B6-A1, 8-bit: 0x44/0x45"); break;
-            case 0x78: Serial.print("P3B6-A2, 8-bit: 0xF0/0xF1"); break;
-            case 0x5D: Serial.print("P3B6-A3, 8-bit: 0xBA/0xBB"); break;
-            default: Serial.print("Unknown variant"); break;
-          }
-          Serial.println(")");
-        }
-      }
-      
-      if (!sensor_found) {
-        Serial.println("✗ ERROR: TLE493D-P3B6 sensor not detected!");
-        Serial.println("  Tried addresses: 0x35 (A0), 0x22 (A1), 0x78 (A2), 0x5D (A3)");
-        Serial.println("  Note: 8-bit addresses are 2x 7-bit (e.g., 0x44 write = 0x22 in 7-bit)");
-        Serial.println("  Please check:");
-        Serial.println("  1. Sensor is properly connected");
-        Serial.println("  2. I2C pullup resistors are present (4.7kΩ recommended)");
-        Serial.println("  3. Correct sensor variant defined in HAL.h");
-        Serial.println("  4. Check if you have P3B6-A0, A1, A2, or A3 variant");
-        // Use A0 address as fallback
-        TLE493D_detected_address = TLE493D_ADDRESS_A0;
-      }
-    #endif
+    }
     
+    if (!sensor_found) {
+      Serial.println("✗ ERROR: TLE493D-W2B6 sensor not detected!");
+      Serial.println("  Tried addresses: 0x1F (A0), 0x22 (A1), 0x6E (A2), 0x44 (A3)");
+      Serial.println("  Note: 8-bit addresses are 2x 7-bit (e.g., 0x44 write = 0x22 in 7-bit)");
+      Serial.println("  Please check:");
+      Serial.println("  1. Sensor is properly connected");
+      Serial.println("  2. I2C pullup resistors are present (4.7kΩ recommended)");
+      Serial.println("  3. Correct sensor variant defined in HAL.h");
+      Serial.println("  4. Check if you have W2B6-A0, A1, A2, or A3 variant");
+      // Use A0 address as fallback
+      TLE493D_detected_address = TLE493D_ADDRESS_A0;
+    }
+    
+  #elif defined(TLE493D_P3B6)
+    Wire1.begin(SDA0_PIN, SCL0_PIN, 1000000L); // Initialize I2C for magnetic sensor
+    
+    // Auto-detect which TLE493D variant is connected
+    bool sensor_found = false;
+    
+    Serial.println("=== TLE493D Sensor Detection ===");
+    Serial.print("Scanning for ");
+    Serial.println(SENSOR_NAME);
+
+    // P3B6: Scan all 4 possible addresses (A0, A1, A2, A3 variants)
+    Serial.println("  Scanning P3B6 addresses (A0/A1/A2/A3 variants)...");
+    for (uint8_t i = 0; i < 4 && !sensor_found; i++) {
+      uint8_t addr = TLE493D_P3B6_addresses[i];
+      Wire1.beginTransmission(addr);
+      if (Wire1.endTransmission() == 0) {
+        TLE493D_detected_address = addr;
+        sensor_found = true;
+        Serial.print("✓ Sensor found at address: 0x");
+        Serial.print(addr, HEX);
+        Serial.print(" (");
+        switch(addr) {
+          case 0x35: Serial.print("P3B6-A0"); break;
+          case 0x22: Serial.print("P3B6-A1, 8-bit: 0x44/0x45"); break;
+          case 0x78: Serial.print("P3B6-A2, 8-bit: 0xF0/0xF1"); break;
+          case 0x5D: Serial.print("P3B6-A3, 8-bit: 0xBA/0xBB"); break;
+          default: Serial.print("Unknown variant"); break;
+        }
+        Serial.println(")");
+      }
+    }
+    
+    if (!sensor_found) {
+      Serial.println("✗ ERROR: TLE493D-P3B6 sensor not detected!");
+      Serial.println("  Tried addresses: 0x35 (A0), 0x22 (A1), 0x78 (A2), 0x5D (A3)");
+      Serial.println("  Note: 8-bit addresses are 2x 7-bit (e.g., 0x44 write = 0x22 in 7-bit)");
+      Serial.println("  Please check:");
+      Serial.println("  1. Sensor is properly connected");
+      Serial.println("  2. I2C pullup resistors are present (4.7kΩ recommended)");
+      Serial.println("  3. Correct sensor variant defined in HAL.h");
+      Serial.println("  4. Check if you have P3B6-A0, A1, A2, or A3 variant");
+      // Use A0 address as fallback
+      TLE493D_detected_address = TLE493D_ADDRESS_A0;
+    }
+  #endif
+  
     // Configure the sensor
-    // Register 0x0A: MOD1 register - sets operation mode
-    // 0xC6: Master Controlled Mode, Fast Mode, Low Power mode disabled
-    // Register 0x0B: MOD2 register
-    // 0x02: Temperature measurement disabled (can be enabled with 0x00)
     Wire1.beginTransmission(TLE493D_detected_address);
-    Wire1.write(0x0A);      // Register address MOD1
-    Wire1.write(0xC6);      // MOD1: Master controlled, Fast mode
-    Wire1.write(0x02);      // MOD2: Temp disabled
+    #ifdef TLE493D_P3B6
+      Serial.println("Setup TLE393D_P3B6...");
+      Wire1.write(0x0A);      // Register address MOD1
+      Wire1.write(0xC6);      // MOD1: Master controlled, Fast mode
+      Wire1.write(0x02);      // MOD2: Temp disabled
+    #endif
+    #ifdef TLE493D_W2B6
+      Serial.println("Setup TLE393D_W2B6...");
+      Wire1.write(0x11);        // Register address MOD1
+      Wire1.write(0b11110111);  // 7-byte read mode, fast mode, low power disabled
+    #endif
     int config_result = Wire1.endTransmission();
-    
+ 
     if (config_result == 0) {
       Serial.println("✓ Sensor configured successfully");
     } else {
@@ -182,31 +195,11 @@ void HAL_InitHW()
     Serial.println("================================");
     Serial.println();
     
-    delay(10); // Give sensor time to configure
-  #endif
+    delay(1000); // Give sensor time to configure
 
   /* configure motor control PWM functionalitites and attach the channel to the GPIO to be controlled */
   ledcAttachChannel(HB_IN_PIN, PWM_FREQ_DEFAULT*1000, THR_PWM_RES_BIT, THR_IN_PWM_CHAN);
   ledcAttachChannel(HB_INH_PIN, PWM_FREQ_DEFAULT*1000, THR_PWM_RES_BIT, THR_INH_PWM_CHAN);
-
-/* LEDC Chan to Group/Channel/Timer Mapping
-** ledc: 0  => Group: 0, Channel: 0, Timer: 0
-** ledc: 1  => Group: 0, Channel: 1, Timer: 0
-** ledc: 2  => Group: 0, Channel: 2, Timer: 1
-** ledc: 3  => Group: 0, Channel: 3, Timer: 1
-** ledc: 4  => Group: 0, Channel: 4, Timer: 2
-** ledc: 5  => Group: 0, Channel: 5, Timer: 2
-** ledc: 6  => Group: 0, Channel: 6, Timer: 3
-** ledc: 7  => Group: 0, Channel: 7, Timer: 3
-** ledc: 8  => Group: 1, Channel: 0, Timer: 0
-** ledc: 9  => Group: 1, Channel: 1, Timer: 0
-** ledc: 10 => Group: 1, Channel: 2, Timer: 1
-** ledc: 11 => Group: 1, Channel: 3, Timer: 1
-** ledc: 12 => Group: 1, Channel: 4, Timer: 2
-** ledc: 13 => Group: 1, Channel: 5, Timer: 2
-** ledc: 14 => Group: 1, Channel: 6, Timer: 3
-** ledc: 15 => Group: 1, Channel: 7, Timer: 3
-*/
 }
 
 void HALanalogWrite (const int PWMchan, int value)
@@ -230,53 +223,60 @@ void HALanalogWrite (const int PWMchan, int value)
 int16_t HAL_ReadTriggerRaw()
 {
   uint16_t retVal = 0;
-
   #if defined (AS5600_MAG) || defined (AS5600L)
     retVal = as5600.readAngle();
-
   #elif defined (MT6701_MAG)
     retVal = mt6701.getAngleDegrees();
-
   #elif defined (ANALOG_TRIG)
     retVal = analogRead(AN_THROT_PIN);  // keep an analog pin aslso as backup, if I2C magnetic is not going
+  #elif defined (TLE493D_P3B6)
+    uint8_t data[4];
 
-  #elif defined (TLE493D_MAG)
-    int16_t angle10degXY = -1;  // angle in tenth of degree
-    int16_t angle10degYZ = -1;  // angle in tenth of degree
-    int16_t zSign, xSign;
-    uint8_t buf[7];
-
-    // Request 4 bytes from sensor (X, Y data registers)
     Wire1.requestFrom(TLE493D_detected_address, 4);
-
     // Read the 4 bytes
     for (uint8_t i = 0; i < 4; i++) {
       if (Wire1.available()) {
-        buf[i] = Wire1.read();
+        data[i] = Wire1.read();
       } else {
-        buf[i] = 0; // Handle case where not enough bytes are available
+        data[i] = 0; // Handle case where not enough bytes are available
       }
     }
 
-    // Build 14-bit signed data for X and Y
-    // TLE493D data format: 
-    // Byte 0: X[11:4]
-    // Byte 1: X[3:0] in bits [7:4], other data in bits [3:0]
-    // Byte 2: Y[11:4]
-    // Byte 3: Y[3:0] in bits [7:4], other data in bits [3:0]
-    
-    int16_t X = (int16_t)((buf[0] << 8) | ((buf[1] & 0x3F) << 2)) >> 2;
-    int16_t Y = (int16_t)((buf[2] << 8) | ((buf[3] & 0x3F) << 2)) >> 2;
-    
-    // Calculate angle from X and Y components
-    xSign = X < 0 ? -1 : 1;
-    angle10degXY = 570 * (atan2(Y * xSign, X) + 1);  // Convert to tenth of degrees (0-3600)
-    retVal = angle10degXY;
-  #endif
+    // Build 14-bit data for P3B6 A0
+    int16_t x = (int16_t)((data[0] << 8) | ((data[1] & 0x3F) << 2)) >> 2;
+    int16_t y = (int16_t)((data[2] << 8) | ((data[3] & 0x3F) << 2)) >> 2;
 
+    int16_t xSign = x < 0 ? -1 : 1;
+    int16_t angle10degXY = 570 * (atan2(y * xSign, x) + 1);
+    retVal = angle10degXY;
+  #elif defined (TLE493D_W2B6)
+    byte data[7];
+
+    Wire1.requestFrom(TLE493D_detected_address, 4);
+    for (byte i = 0; i < 7; i++) {
+      data[i] = Wire1.read();
+    }
+
+    int16_t x = (data[0] << 4) | (data[4] >> 4);
+    if (x >= 2048) x -= 4096;
+
+    int16_t y = (data[1] << 4) | (data[4] & 0x0F);
+    if (y >= 2048) y -= 4096;
+
+    float angleRad = atan2((float)y, (float)x);
+    float angleDeg = angleRad * 180.0 / PI;
+    if (angleDeg < 0) angleDeg += 360.0;
+
+    retVal = (int16_t)(angleDeg * 10.0);
+  #endif
+//  Serial.print("x=");
+//  Serial.print(x);
+//  Serial.print(", y=");
+//  Serial.print(y);
+//  Serial.print(", r=");
+//  Serial.println(retVal);
   return retVal;
 }
-
 
 void HAL_PinSetup()
 {

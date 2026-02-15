@@ -46,7 +46,7 @@
 
 /******** TRIGGER ********/
 //#define AS5600_MAG  // DEFAULT WORKING
-#define TLE493D_MAG // Infineon Mag sensor , Alfonso green
+//#define TLE493D_MAG // Infineon Mag sensor , Alfonso green
 //#define AS5600L_MAG // similar to the AS5600, but 5600L has differnt address 
 //#define ANALOG_TRIG  // define ANALOG_TRIG in case you are using potentiometer , or magnetic with simple analog output as trigger
 //#define MT6701_MAG  // define MT6701_MAG if you are using a MT6701 magnetic sensor
@@ -64,9 +64,10 @@
   #define THROTTLE_REV        1  /* if 1 the throttle is at full press when the ADC value is the minimum */
 #elif defined (ANALOG_TRIG)
   #define THROTTLE_REV        1  /* if 1 the throttle is at full press when the ADC value is the minimum */
-#elif defined (TLE493D_MAG)
-  #define THROTTLE_REV        0  /* (yellow is 0) if 1 the throttle is at full press when the ADC value is the minimum */
+#elif defined (TLE493D_P3B6) || defined (TLE493D_W2B6)
+  #define THROTTLE_REV        0  /* if 1 the throttle is at full press when the ADC value is the minimum */
 #endif
+
 
 /******** EEPROM *********/
 /* Deprecated */
