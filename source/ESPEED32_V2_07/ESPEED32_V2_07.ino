@@ -11,7 +11,7 @@
 #define CONFIG_BOOTLOADER_LOG_LEVEL ESP_LOG_NONE
 
 #define SW_MAJOR_VERSION 2
-#define SW_MINOR_VERSION 06
+#define SW_MINOR_VERSION 07
 #define STORED_VAR_VERSION 4 /* tells which version of stored variable is used for thisproject in case the stored var */
                              /* changes from previous SW release, please increase the STORED_VAR_VERSION by 1         */
 
