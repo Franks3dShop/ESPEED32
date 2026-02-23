@@ -1,8 +1,8 @@
 # SlotEsp32
 2026 Febuary 22 - minor version update to 2.07 (Franks3dShop)
 Updates:
-  - Schematic HAL effect sensor to TLE493D-P3B6A0
-  - BOM to TLE493D-P3B6A0
+  - Change the Schematic HAL effect sensor for the correct TLE493D-P3B6A0
+  - Change BOM to TLE493D-P3B6A0
   - Added support and tested support for TLE493D-W2B6, WARNING the resoluttion of this sensor is way less and trigger is less precise steping about 8% during acceleration.
   - Updated code to find version A0-A3 automatically
   - Added a space character for the car name
@@ -14,6 +14,7 @@ Cutting edge Slot car controller that has an ESP32 at its heart.
 How to built it video:
 https://www.youtube.com/watch?v=JtMKeiguHKI
 ![ThumbV2](https://github.com/user-attachments/assets/9b7e1479-4882-4ed7-93d0-4a9a81be73fc)
+
 
 
 
